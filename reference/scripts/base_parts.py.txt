@@ -1,0 +1,244 @@
+# ---- colours / helpers ---------------------------------------------------
+NAVY, PAPER, GREEN, RED, BLUE = "#0a1424", "#f2ecdf", "#39d98a", "#ff5d4f", "#3b7bff"
+el_html, js = [], []
+uid = [0]
+
+
+def nid(p):
+    uid[0] += 1
+    return f"{p}{uid[0]}"
+
+
+def mark(text):
+    """*green* and !red! inline accents -> spans."""
+    t = html.escape(text)
+    t = re.sub(r"\*(.+?)\*", r'<span class="g">\1</span>', t)
+    t = re.sub(r"!(.+?)!", r'<span class="r">\1</span>', t)
+    return t
+
+
+def plain(text):
+    return re.sub(r"[*!]", "", text)
+
+
+ICON = {
+    "ok": '<svg class="ic" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="none" stroke="#39d98a" stroke-width="4"/><path d="M14 25l7 7 13-15" fill="none" stroke="#39d98a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    "no": '<svg class="ic" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="none" stroke="#ff5d4f" stroke-width="4"/><path d="M16 16l16 16M32 16L16 32" stroke="#ff5d4f" stroke-width="5" stroke-linecap="round"/></svg>',
+}
+
+# ---- camera track (room vs studio, punch-ins) ----------------------------
+STUDIO = []   # (t0, t1, side) side 'L' => presenter on left, panel right
+
+
+def studio(t0, t1, side):
+    STUDIO.append((t0, t1, side))
+
+
+# ---- BEHIND cues (text between room plate and presenter) --------------------------
+BEHIND = []
+ENTR = ["slam", "rise", "wipe", "skew"]
+
+
+def behind(kicker, beats, t_end):
+    BEHIND.append((kicker, beats, t_end))
+
+
+def split_words(text):
+    """'NO !SPYING!' -> [('NO',''),('SPYING','r')] keeping *green* / !red! accents per word."""
+    out = []
+    for m in re.finditer(r"\*(.+?)\*|!(.+?)!|([^*!]+)", text):
+        g, r, p = m.groups()
+        cls, seg = ("g", g) if g else (("r", r) if r else ("", p))
+        for i, w in enumerate(seg.split()):
+            if out and (not re.search(r"[A-Za-z0-9$]", w) or (i == 0 and not seg[:1].isspace() and m.start() > 0
+                                                               and not text[m.start() - 1].isspace())):
+                out[-1] = (out[-1][0] + w, out[-1][1])
+            else:
+                out.append((w, cls))
+    return out
+
+
+def halves(words, side_hint):
+    """Split a word list into (left, right) balanced by characters; single words take one side."""
+    if len(words) == 1:
+        return (words, []) if side_hint == 0 else ([], words)
+    best = None
+    tot = sum(len(w) for w, _ in words)
+    for k in range(1, len(words)):
+        l = sum(len(w) for w, _ in words[:k])
+        d = abs(tot - 2 * l) + (4 if words[k - 1][1] and words[k - 1][1] == words[k][1] else 0)
+        if best is None or d < best[0]:
+            best = (d, k)
+    k = best[1]
+    return words[:k], words[k:]
+
+
+def rows_for(words):
+    chars = sum(len(w) for w, _ in words) + len(words) - 1
+    if chars <= 20 or len(words) < 3:
+        return [words]
+    # two rows, balanced by characters
+    best = None
+    tot = sum(len(w) for w, _ in words)
+    for k in range(1, len(words)):
+        l = sum(len(w) for w, _ in words[:k])
+        d = abs(tot - 2 * l)
+        if best is None or d < best[0]:
+            best = (d, k)
+    return [words[:best[1]], words[best[1]:]]
+
+
+def span_words(ws):
+    return " ".join(f'<span class="{c}">{html.escape(w)}</span>' if c else html.escape(w) for w, c in ws)
+
+
+def build_behind():
+    beat_no = 0
+    for n, (kicker, beats, t_end) in enumerate(BEHIND):
+        t0 = beats[0][0] - 0.12
+        t0s, t1s = T(t0), T(t_end)
+        cid = f"bh{n}"
+        inner = [f'<div class="kicker" id="{cid}k" data-layout-allow-overlap><span class="kdot"></span>{html.escape(kicker)}</div>']
+        beat_parts = []
+        for b, (bt, text) in enumerate(beats):
+            words = split_words(text)
+            rows = rows_for(words)
+            nrow = len(rows)
+            parts = []
+            for r, rw in enumerate(rows):
+                L, R = halves(rw, (beat_no + r) % 2)
+                grp = f"{cid}b{b}r{r}"
+                for side, ws in (("l", L), ("r", R)):
+                    if not ws:
+                        continue
+                    pid = f"{grp}{side}"
+                    parts.append((pid, side, r))
+                    inner.append(f'<div class="bh bh-{side} rows{nrow} row{r}" id="{pid}" data-fitgroup="{grp}" '
+                                 f'data-fit="{html.escape(" ".join(w for w, _ in ws))}" data-fitw="655" data-layout-allow-overlap>{span_words(ws)}</div>')
+            beat_parts.append(parts)
+            beat_no += 1
+        el_html.append(
+            f'<div class="clip behind" id="{cid}" data-start="{t0s}" data-duration="{round(t1s - t0s, 3)}" data-track-index="3">'
+            + "".join(inner) + "</div>")
+        js.append(f'tl.fromTo("#{cid}k",{{opacity:0,y:-30}},{{opacity:1,y:0,duration:.35,ease:"power3.out"}},{t0s});')
+        for b, (bt, text) in enumerate(beats):
+            s = T(bt) - 0.05
+            e = T(beats[b + 1][0]) - 0.05 if b + 1 < len(beats) else t1s
+            rise = (n + b) % 3 == 2
+            for pid, side, r in beat_parts[b]:
+                sel = f"#{pid}"
+                sign = -1 if side == "l" else 1
+                d = r * 0.08
+                if rise:
+                    # rises up from behind the shoulders
+                    js.append(f'tl.fromTo("{sel}",{{opacity:0,yPercent:70,x:{-sign * 30}}},{{opacity:1,yPercent:0,x:0,duration:.55,ease:"back.out(1.5)"}},{s + d:.3f});')
+                else:
+                    # slides in from the frame edge toward the presenter
+                    js.append(f'tl.fromTo("{sel}",{{opacity:0,x:{sign * 760},skewX:{sign * -14},filter:"blur(10px)"}},'
+                              f'{{opacity:1,x:0,skewX:0,filter:"blur(0px)",duration:.55,ease:"expo.out"}},{s + d:.3f});')
+                # keeps drifting inward, tucking behind the presenter
+                hold = max(.3, e - s - .8)
+                js.append(f'tl.to("{sel}",{{x:{-sign * 18},duration:{hold:.2f},ease:"none"}},{s + .55 + d:.3f});')
+                js.append(f'tl.to("{sel}",{{opacity:0,x:{-sign * 120},duration:.22,ease:"power2.in"}},{e - .22:.3f});')
+        js.append(f'tl.to("#{cid}k",{{opacity:0,duration:.2}},{t1s - .22:.3f});')
+        js.append(f'tl.to("#scrim",{{opacity:.6,duration:.3,ease:"power2.out"}},{t0s:.3f});')
+        js.append(f'tl.to("#scrim",{{opacity:0,duration:.3,ease:"power2.in"}},{t1s - .3:.3f});')
+
+
+# ---- STUDIO panels -----------------------------------------------------------
+PANELS = []
+
+
+def panel(side, t0, t1, pages):
+    """pages: list of (t_page, title, items); items: (t, kind, text[, extra])"""
+    studio(t0, t1, side)
+    PANELS.append((side, t0, t1, pages))
+
+
+def build_panels():
+    for n, (side, t0, t1, pages) in enumerate(PANELS):
+        pid = f"pn{n}"
+        t0s, t1s = T(t0), T(t1)
+        cls = "right" if side == "L" else "left"
+        parts = []
+        for p, (tp, title, items) in enumerate(pages):
+            pg = f"{pid}p{p}"
+            rows = []
+            for i, it in enumerate(items):
+                ti, kind, text = it[0], it[1], it[2]
+                iid = f"{pg}i{i}"
+                if kind in ("ok", "no"):
+                    rows.append(f'<div class="row {kind}" id="{iid}">{ICON[kind]}<span>{mark(text)}</span></div>')
+                elif kind == "chip":
+                    rows.append(f'<div class="chip" id="{iid}">{mark(text)}</div>')
+                elif kind == "swatch":
+                    rows.append(f'<div class="swatch" id="{iid}"><i style="background:{it[3]}"></i><span>{mark(text)}</span></div>')
+                elif kind == "note":
+                    rows.append(f'<div class="note" id="{iid}">{mark(text)}</div>')
+                elif kind == "stamp":
+                    col = it[3] if len(it) > 3 else "red"
+                    rows.append(f'<div class="stamp {col}" id="{iid}">{mark(text)}</div>')
+                elif kind == "hero":
+                    rows.append(f'<div class="hero" id="{iid}" data-fit="{html.escape(plain(text))}" data-fitw="860">{mark(text)}</div>')
+                elif kind == "step":
+                    rows.append(f'<div class="step" id="{iid}"><b>{html.escape(it[3])}</b><span>{mark(text)}</span></div>')
+                elif kind == "link":
+                    rows.append(f'<div class="linkcta" id="{iid}"><div class="pill">{mark(text)}</div>'
+                                '<div class="chev"><i></i><i></i><i></i></div></div>')
+                elif kind == "meter":
+                    rows.append(f'<div class="meter" id="{iid}"><div class="mlabel">{mark(text)}</div>'
+                                f'<div class="mtrack"><div class="mfill" id="{iid}f"></div></div></div>')
+                elif kind == "ba":
+                    rows.append(f'<div class="ba" id="{iid}"><div class="bcard" id="{iid}a"><small>BEFORE</small>'
+                                f'<span>{mark(text)}</span></div><div class="barrow" id="{iid}x">→</div>'
+                                f'<div class="bcard after" id="{iid}b"><small>AFTER</small><span>{mark(it[3])}</span></div></div>')
+                elif kind == "slot":
+                    rows.append(f'<div class="slot" id="{iid}"><small>WATCH NEXT</small><div class="slotbig">{mark(text)}</div>'
+                                f'<div class="slotsub" id="{iid}s">{mark(it[3])}</div></div>')
+            title_html = f'<div class="ptitle" id="{pg}t" data-fit="{html.escape(plain(title))}" data-fitw="860">{mark(title)}</div>' if title else ""
+            parts.append(f'<div class="page" id="{pg}"><div class="prule" id="{pg}r"></div>{title_html}<div class="rows">{"".join(rows)}</div></div>')
+        el_html.append(f'<div class="clip panel {cls}" id="{pid}" data-start="{t0s}" data-duration="{round(t1s - t0s, 3)}" data-track-index="5">{"".join(parts)}</div>')
+
+        for p, (tp, title, items) in enumerate(pages):
+            pg = f"{pid}p{p}"
+            ps = max(T(tp) - 0.1, t0s + 0.25) if p == 0 else T(tp) - 0.1
+            pe = T(pages[p + 1][0]) - 0.1 if p + 1 < len(pages) else t1s
+            dx = 60 if side == "L" else -60
+            js.append(f'tl.fromTo("#{pg}",{{opacity:0,x:{dx}}},{{opacity:1,x:0,duration:.45,ease:"power3.out"}},{ps:.3f});')
+            js.append(f'tl.fromTo("#{pg}r",{{scaleX:0}},{{scaleX:1,duration:.6,ease:"expo.out"}},{ps + .05:.3f});')
+            if title:
+                js.append(f'tl.fromTo("#{pg}t",{{opacity:0,yPercent:60}},{{opacity:1,yPercent:0,duration:.5,ease:"back.out(1.4)"}},{ps + .08:.3f});')
+            for i, it in enumerate(items):
+                ti, kind = T(it[0]) - 0.06, it[1]
+                ti = max(ti, ps + 0.15)
+                iid = f"#{pg}i{i}"
+                if kind == "stamp":
+                    js.append(f'tl.fromTo("{iid}",{{opacity:0,scale:2.2,rotation:-14}},{{opacity:1,scale:1,rotation:-4,duration:.32,ease:"back.out(2.2)"}},{ti:.3f});')
+                elif kind == "hero":
+                    js.append(f'tl.fromTo("{iid}",{{opacity:0,scale:1.25,filter:"blur(10px)"}},{{opacity:1,scale:1,filter:"blur(0px)",duration:.45,ease:"expo.out"}},{ti:.3f});')
+                elif kind == "chip":
+                    js.append(f'tl.fromTo("{iid}",{{opacity:0,scale:.6,y:30}},{{opacity:1,scale:1,y:0,duration:.38,ease:"back.out(2)"}},{ti:.3f});')
+                elif kind == "link":
+                    js.append(f'tl.fromTo("{iid}",{{opacity:0,y:80,scale:.8}},{{opacity:1,y:0,scale:1,duration:.5,ease:"back.out(1.8)"}},{ti:.3f});')
+                    dur = pe - ti - 0.6
+                    reps = max(0, int(dur / 0.7) - 1)
+                    js.append(f'tl.fromTo("{iid} .chev",{{y:0}},{{y:34,duration:.35,ease:"power2.in",yoyo:true,repeat:{reps * 2 + 1}}},{ti + .5:.3f});')
+                    js.append(f'tl.fromTo("{iid} .pill",{{scale:1}},{{scale:1.06,duration:.35,ease:"sine.inOut",yoyo:true,repeat:{reps * 2 + 1}}},{ti + .5:.3f});')
+                elif kind == "meter":
+                    js.append(f'tl.fromTo("{iid}",{{opacity:0,x:40}},{{opacity:1,x:0,duration:.4,ease:"power3.out"}},{ti:.3f});')
+                    js.append(f'tl.fromTo("{iid}f",{{scaleX:0}},{{scaleX:.92,duration:1.6,ease:"power4.out"}},{ti + .25:.3f});')
+                elif kind == "ba":
+                    js.append(f'tl.fromTo("{iid}a",{{opacity:0,x:-40}},{{opacity:1,x:0,duration:.4,ease:"power3.out"}},{ti:.3f});')
+                    js.append(f'tl.fromTo("{iid}x",{{opacity:0,scale:.3}},{{opacity:1,scale:1,duration:.35,ease:"back.out(2)"}},{ti + .6:.3f});')
+                    js.append(f'tl.fromTo("{iid}b",{{opacity:0,x:40}},{{opacity:1,x:0,duration:.4,ease:"power3.out"}},{T(it[4]) - .06 if len(it) > 4 else ti + 1.1:.3f});')
+                elif kind == "slot":
+                    js.append(f'tl.fromTo("{iid}",{{opacity:0,scale:.85}},{{opacity:1,scale:1,duration:.5,ease:"back.out(1.6)"}},{ti:.3f});')
+                    js.append(f'tl.fromTo("{iid}s",{{opacity:0,y:20}},{{opacity:1,y:0,duration:.4,ease:"power3.out"}},{T(it[4]) - .06:.3f});')
+                else:
+                    js.append(f'tl.fromTo("{iid}",{{opacity:0,x:{dx}}},{{opacity:1,x:0,duration:.4,ease:"power3.out"}},{ti:.3f});')
+            if p + 1 < len(pages):
+                js.append(f'tl.to("#{pg}",{{opacity:0,x:{-dx},duration:.25,ease:"power2.in"}},{pe - .25:.3f});')
+        js.append(f'tl.to("#{pid} .page",{{opacity:0,duration:.25,ease:"power2.in"}},{t1s - .28:.3f});')
+
+
+# =====================================================================

@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>CHANNEL NAME — Episode Title</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Newsreader";
+        src: url("assets/fonts/Newsreader.ttf") format("truetype");
+        font-weight: 200 800;
+        font-style: normal;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0a1424; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0a1424; font-family: "Space Mono", monospace; color: #f2ecdf; }
+      .g { color: #39d98a; }
+      .r { color: #ff5d4f; }
+
+      /* studio ground */
+      #studio { position: absolute; inset: 0; background: #0a1424; overflow: hidden; }
+      #studio .glow1 { position: absolute; width: 1400px; height: 1400px; left: -420px; top: 260px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(57,217,138,0.30) 0%, rgba(57,217,138,0) 62%); }
+      #studio .glow2 { position: absolute; width: 1300px; height: 1300px; left: 1000px; top: -620px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(59,123,255,0.28) 0%, rgba(59,123,255,0) 62%); }
+      #studio .grid { position: absolute; inset: -80px; opacity: 0.14;
+        background-image: linear-gradient(rgba(242,236,223,0.5) 2px, transparent 2px), linear-gradient(90deg, rgba(242,236,223,0.5) 2px, transparent 2px);
+        background-size: 120px 120px; }
+      #studio .ghost { position: absolute; left: -40px; bottom: -120px; width: 2400px; font-family: "League Gothic"; font-size: 520px; line-height: 1;
+        color: rgba(242,236,223,0.07); white-space: nowrap; letter-spacing: -0.01em; }
+
+      #platecard { position: absolute; inset: 0; transform-origin: 0 0; z-index: 1; }
+      #cardring { position: absolute; z-index: 1; border: 6px solid rgba(57,217,138,0.85); border-radius: 34px; opacity: 0;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 60px rgba(57,217,138,0.25); pointer-events: none; }
+      #platecam, #fgcam { position: absolute; inset: 0; transform-origin: 50% 30%; }
+      #fgcam { z-index: 4; }
+      .fill { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; transform: scale(1.03); transform-origin: 0 0; }
+      #scrim { position: absolute; inset: 0; background: #07101e; opacity: 0; z-index: 2; }
+
+      /* text behind the presenter */
+      .behind { position: absolute; inset: 0; z-index: 3; }
+      .behind .kicker { position: absolute; left: 70px; right: 70px; top: 30px; font-family: "Space Mono"; font-weight: 700; font-size: 30px;
+        letter-spacing: 0.08em; color: #39d98a; display: flex; align-items: center; gap: 18px; text-transform: uppercase; }
+      .behind .kdot { display: block; width: 18px; height: 18px; border-radius: 50%; background: #39d98a; flex: 0 0 18px; }
+      .behind .bh { position: absolute; font-family: "League Gothic"; line-height: 0.9; color: #f2ecdf; white-space: nowrap;
+        text-transform: uppercase; letter-spacing: -0.005em; opacity: 0; text-shadow: 0 12px 60px rgba(0,0,0,0.45); }
+      .behind .bh-l { right: 1235px; text-align: right; }
+      .behind .bh-r { left: 1235px; text-align: left; }
+      .behind .rows1.row0 { top: 70px; font-size: 470px; }
+      .behind .rows2.row0 { top: 62px; font-size: 250px; }
+      .behind .rows2.row1 { top: 292px; font-size: 250px; }
+
+      /* studio panels */
+      .panel { position: absolute; inset: 0; z-index: 5; }
+      .panel .page { position: absolute; top: 110px; bottom: 90px; width: 900px; display: flex; flex-direction: column; justify-content: center; opacity: 0; }
+      .panel.right .page { left: 820px; width: 1020px; }
+      .panel.left .page { left: 80px; width: 1020px; }
+      .prule { width: 220px; height: 10px; background: #39d98a; transform-origin: 0 50%; margin-bottom: 26px; }
+      .ptitle { font-family: "League Gothic"; font-size: 200px; letter-spacing: 0.005em; text-shadow: 0 10px 40px rgba(0,0,0,0.45); line-height: 0.95; color: #f2ecdf; white-space: nowrap; text-transform: uppercase; margin-bottom: 18px; }
+      .rows { display: flex; flex-direction: column; align-items: flex-start; }
+      .row { display: flex; align-items: center; gap: 26px; font-family: "League Gothic"; font-size: 104px; line-height: 1; margin: 12px 0; text-transform: uppercase; }
+      .row .ic { display: block; width: 84px; height: 84px; flex: 0 0 84px; }
+      .row.no span { color: #f2ecdf; text-decoration: line-through; text-decoration-color: #ff5d4f; text-decoration-thickness: 8px; }
+      .chip { display: inline-block; font-family: "League Gothic"; font-size: 110px; line-height: 1.05; padding: 4px 30px 0; margin: 12px 0;
+        border: 5px solid #39d98a; border-radius: 18px; background: rgba(57,217,138,0.10); color: #f2ecdf; white-space: nowrap; text-transform: uppercase; }
+      .note { font-family: "League Gothic"; font-size: 98px; line-height: 1.02; margin: 12px 0; color: #f2ecdf; text-transform: uppercase; max-width: 1000px; }
+      .hero { font-family: "League Gothic"; font-size: 270px; text-shadow: 0 14px 50px rgba(0,0,0,0.5); line-height: 0.95; white-space: nowrap; text-transform: uppercase; color: #f2ecdf; margin: 6px 0; }
+      .stamp { display: inline-block; font-family: "League Gothic"; font-size: 150px; line-height: 1.02; padding: 6px 36px 0; margin-top: 30px;
+        border: 12px solid #ff5d4f; color: #ff5d4f; border-radius: 10px; white-space: nowrap; background: rgba(10,20,36,0.6); }
+      .stamp.green { border-color: #39d98a; color: #39d98a; }
+      .step { display: flex; align-items: baseline; gap: 26px; margin: 4px 0; }
+      .step b { font-family: "Space Mono"; font-weight: 700; font-size: 44px; color: #0a1424; background: #39d98a; border-radius: 10px; padding: 2px 12px; align-self: center; }
+      .step span { font-family: "League Gothic"; font-size: 108px; line-height: 1; text-transform: uppercase; white-space: nowrap; }
+      .linkcta { display: flex; flex-direction: column; align-items: center; margin-top: 34px; align-self: stretch; }
+      .pill { display: block; font-family: "League Gothic"; font-size: 104px; line-height: 1.08; padding: 6px 54px 0; border-radius: 999px;
+        background: #39d98a; color: #0a1424; white-space: nowrap; box-shadow: 0 0 60px rgba(57,217,138,0.45); }
+      .chev { display: flex; flex-direction: column; align-items: center; margin-top: 18px; height: 150px; }
+      .chev i { display: block; width: 58px; height: 58px; border-right: 13px solid #39d98a; border-bottom: 13px solid #39d98a;
+        transform: rotate(45deg); margin-top: -18px; }
+      .chev i:nth-child(2) { opacity: 0.7; }
+      .chev i:nth-child(3) { opacity: 0.4; }
+      .meter { margin: 20px 0; }
+      .mlabel { font-family: "Space Mono"; font-weight: 700; font-size: 44px; margin-bottom: 18px; }
+      .mtrack { width: 840px; height: 56px; border: 5px solid #f2ecdf; border-radius: 28px; overflow: hidden; }
+      .mfill { width: 100%; height: 100%; background: #39d98a; transform-origin: 0 50%; }
+      .ba { display: flex; align-items: center; gap: 26px; margin: 22px 0; }
+      .bcard { display: flex; flex-direction: column; width: 360px; padding: 26px 30px; border: 5px solid rgba(242,236,223,0.55); border-radius: 22px; background: rgba(10,20,36,0.55); }
+      .bcard.after { border-color: #39d98a; }
+      .bcard small { font-family: "Space Mono"; font-weight: 700; font-size: 30px; color: #39d98a; letter-spacing: 0.1em; }
+      .bcard span { font-family: "League Gothic"; font-size: 92px; line-height: 1; white-space: nowrap; }
+      .barrow { font-family: "Space Mono"; font-weight: 700; font-size: 80px; color: #39d98a; }
+      .slot { width: 860px; height: 484px; border: 7px solid #39d98a; border-radius: 30px; padding: 44px 56px; display: flex; flex-direction: column;
+        justify-content: center; background: rgba(5,11,22,0.7); box-shadow: 0 0 80px rgba(57,217,138,0.25); }
+      .slot small { font-family: "Space Mono"; font-weight: 700; font-size: 36px; letter-spacing: 0.14em; color: #39d98a; }
+      .slotbig { font-family: "League Gothic"; font-size: 230px; line-height: 1; }
+      .slotsub { font-family: "Space Mono"; font-weight: 700; font-size: 34px; line-height: 1.3; }
+
+      /* lower third */
+      .lower3 { position: absolute; left: 80px; bottom: 110px; width: 1000px; height: 250px; z-index: 6; }
+      .l3bar { position: absolute; left: 0; top: 0; width: 14px; height: 250px; background: #39d98a; transform-origin: 50% 100%; }
+      .l3name { position: absolute; left: 44px; top: 10px; font-family: "League Gothic"; font-size: 150px; line-height: 1; color: #f2ecdf;
+        text-shadow: 0 6px 30px rgba(0,0,0,0.6); white-space: nowrap; }
+      .l3sub { position: absolute; left: 48px; top: 172px; font-family: "Space Mono"; font-weight: 700; font-size: 34px; letter-spacing: 0.12em;
+        color: #0a1424; background: #39d98a; padding: 6px 18px; white-space: nowrap; }
+
+      /* manuscript */
+      .readscene { position: absolute; inset: 0; z-index: 7; }
+      .readscene .paper { position: absolute; inset: 0; background: #f2ecdf; }
+      .readscene .paperglow { position: absolute; width: 1600px; height: 1600px; left: -300px; top: -700px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(57,217,138,0.16) 0%, rgba(57,217,138,0) 60%); }
+      .rhead { position: absolute; left: 110px; top: 46px; display: flex; gap: 26px; align-items: center; font-family: "Space Mono"; font-weight: 700;
+        font-size: 30px; letter-spacing: 0.1em; color: #191713; }
+      .chipg { background: #191713; color: #39d98a; padding: 6px 16px; border-radius: 8px; }
+      .rpage { position: absolute; top: 140px; bottom: 60px; display: flex; flex-direction: column; justify-content: center; opacity: 0; }
+      .rpage.colL { left: 110px; width: 1150px; }
+      .rpage.colR { left: 700px; width: 1120px; }
+      .rpage p { font-family: "Newsreader"; font-weight: 450; font-size: 1em; line-height: 1.42; margin: 0 0 30px; color: #191713; }
+      .rpage .w { color: rgba(25,23,19,0.32); border-radius: 6px; }
+      .camwrap { position: absolute; left: 1280px; top: 0; width: 640px; height: 1080px; z-index: 8; overflow: hidden;
+        filter: drop-shadow(0 18px 40px rgba(25,23,19,0.45)); }
+      #camflip { position: absolute; inset: 0; transform-origin: 50% 50%; }
+      .camwrap video { position: absolute; left: 0; bottom: -46px; width: 640px; height: 1126px; }
+
+
+      /* highlighter accents: key words get a solid green block in panel bodies */
+      .rows .g, .cchip .g { background: #39d98a; color: #0a1424; padding: 0 0.14em; border-radius: 0.08em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+      .rows .hero .g { background: none; color: #39d98a; padding: 0; }
+      .rows .chip .g { background: none; color: #39d98a; padding: 0; }
+      .rows .o3 .g, .rows .bcard .g { background: none; color: #39d98a; padding: 0; }
+      .ptitle .g { color: #39d98a; }
+      /* research beats */
+      .big { display: flex; align-items: baseline; gap: 30px; margin: 2px 0; }
+      .big b { font-family: "League Gothic"; font-weight: 400; font-size: 190px; line-height: 0.95; color: #39d98a; min-width: 300px; text-align: right; transform-origin: 100% 60%; }
+      .big span { font-family: "League Gothic"; font-size: 110px; line-height: 1; text-transform: uppercase; }
+      .bar { display: grid; grid-template-columns: 260px 560px 140px; align-items: center; gap: 20px; margin: 14px 0; }
+      .blabel { font-family: "League Gothic"; font-size: 100px; line-height: 1; text-transform: uppercase; }
+      .btrack { height: 58px; border-radius: 12px; background: rgba(242,236,223,0.10); overflow: hidden; }
+      .bfill { height: 100%; background: #39d98a; border-radius: 12px; transform-origin: 0 50%; }
+      .bpct { font-family: "Space Mono"; font-weight: 700; font-size: 50px; color: #39d98a; }
+      .shot { width: 1000px; height: 560px; border-radius: 22px; overflow: hidden; border: 5px solid rgba(242,236,223,0.25);
+        position: relative; background: #111; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }
+      .shotin { position: absolute; left: 0; top: 0; width: 1000px; height: 625px; transform-origin: 0 0; }
+      .shotin img { width: 1000px; height: 625px; display: block; }
+      .srcl { font-family: "Space Mono"; font-weight: 700; font-size: 26px; letter-spacing: 0.06em; color: rgba(242,236,223,0.72); margin-top: 22px; }
+      .o3 { display: flex; align-items: baseline; gap: 26px; margin: 14px 0; }
+      .o3 b { font-family: "League Gothic"; font-weight: 400; font-size: 120px; line-height: 1; color: #39d98a; white-space: nowrap; }
+      .o3 i { font-style: normal; font-family: "Space Mono"; font-size: 60px; color: #f2ecdf; }
+      .o3 span { font-family: "League Gothic"; font-size: 92px; line-height: 1; text-transform: uppercase; white-space: nowrap; }
+      .quote { margin: 18px 0; padding: 26px 34px; border-radius: 22px; background: rgba(242,236,223,0.08); border-left: 10px solid #f2ecdf; }
+      .qt { font-family: "Newsreader"; font-style: italic; font-weight: 600; font-size: 76px; line-height: 1.15; }
+      .qdest { display: inline-block; margin-top: 14px; font-family: "League Gothic"; font-size: 70px; padding: 2px 26px 0; border-radius: 14px; }
+      .qdest.g { background: #39d98a; color: #0a1424; }
+      .qdest.b { background: #3b7bff; color: #f2ecdf; }
+      .fold { width: 1000px; position: relative; }
+      .fnote { width: 920px; padding: 30px 38px; background: #f2ecdf; color: #191713; border-radius: 18px; font-family: "Newsreader"; font-style: italic;
+        font-size: 56px; line-height: 1.2; box-shadow: 0 24px 60px rgba(0,0,0,0.45); transform-origin: 50% 50%; }
+      .fnote small { display: block; font-family: "Space Mono"; font-style: normal; font-weight: 700; font-size: 24px; letter-spacing: 0.12em; color: #0f7a45; margin-bottom: 8px; }
+      .fnote .g { color: #0f7a45; }
+      .frow { display: flex; gap: 30px; margin-top: 60px; }
+      .ftile { width: 300px; height: 220px; border: 5px solid rgba(242,236,223,0.5); border-radius: 18px; background: rgba(10,20,36,0.7);
+        display: flex; align-items: flex-end; padding: 22px; position: relative; }
+      .ftab { position: absolute; left: 22px; top: -26px; width: 120px; height: 26px; border-radius: 10px 10px 0 0; background: inherit; border: 5px solid rgba(242,236,223,0.5); border-bottom: 0; }
+      .ftile span { font-family: "League Gothic"; font-size: 62px; line-height: 0.95; }
+      .row.row2 span { color: #f2ecdf; }
+
+      /* foreground callouts over the original footage */
+      .callout { position: absolute; inset: 0; z-index: 6; pointer-events: none; }
+      .callout.stack { display: flex; flex-direction: column; justify-content: flex-end; gap: 18px; padding: 0 70px; }
+      .callout.stackside { display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: 0 80px; }
+      .callout.stackside.sideL { align-items: flex-start; }
+      .callout.stackside.sideR { align-items: flex-end; }
+      .callout.stackside .cchip { font-family: "League Gothic"; font-size: 120px; line-height: 1.02; padding: 8px 36px 0; border-radius: 18px; text-transform: uppercase;
+        background: rgba(10,20,36,0.86); border: 5px solid #39d98a; box-shadow: 0 18px 50px rgba(0,0,0,0.5); white-space: nowrap; }
+      .callout.stack.sideL { align-items: flex-start; }
+      .callout.stack.sideR { align-items: flex-end; }
+      .callout.stack .cchip { font-family: "League Gothic"; font-size: var(--fs, 110px); line-height: 1.02; padding: 8px 36px 0; border-radius: 18px; text-transform: uppercase;
+        background: rgba(10,20,36,0.86); border: 5px solid #39d98a; box-shadow: 0 18px 50px rgba(0,0,0,0.5); white-space: nowrap; }
+      .callout.lower .cchip, .callout.chapter .cchip, .callout.quote .cchip { position: absolute; left: 80px; bottom: 100px; font-family: "League Gothic"; font-size: 140px;
+        line-height: 1.02; padding: 12px 46px 2px; border-radius: 20px; text-transform: uppercase; background: rgba(10,20,36,0.9);
+        border-left: 16px solid #39d98a; box-shadow: 0 20px 60px rgba(0,0,0,0.55); white-space: nowrap; }
+      .callout.lower.sideR .cchip, .callout.quote.sideR .cchip { left: auto; right: 80px; }
+      .callout.chapter .cchip { background: #39d98a; color: #0a1424; border-left: 0; }
+      .callout.chapter .cchip .g { color: #0a1424; text-decoration: underline; text-decoration-thickness: 8px; }
+      .callout.quote .cchip:nth-child(1) { bottom: 280px; font-size: 118px; }
+      .callout.quote .cchip:nth-child(2) { font-size: 104px; }
+
+      /* outro next-video title (lower-left, under the pointing hand, clear of thumbnail slots) */
+      .nexttitle { position: absolute; left: 70px; bottom: 60px; width: 1240px; z-index: 7; padding: 26px 40px 24px; border-radius: 22px;
+        background: rgba(10,20,36,0.9); border-left: 16px solid #39d98a; box-shadow: 0 20px 60px rgba(0,0,0,0.55); }
+      .nxk { font-family: "Space Mono"; font-weight: 700; font-size: 30px; letter-spacing: 0.14em; color: #39d98a; margin-bottom: 8px; }
+      .nxt { font-family: "League Gothic"; font-size: 96px; line-height: 1; text-transform: uppercase; color: #f2ecdf; }
+
+      /* full-screen takeovers */
+      .takeover { position: absolute; inset: 0; z-index: 9; }
+      .tobg { position: absolute; inset: 0; background: #0a1424; }
+      .beam { position: absolute; top: -200px; width: 700px; height: 1480px; border-radius: 50%; }
+      .beam.b1 { left: 300px; background: radial-gradient(ellipse at center, rgba(57,217,138,0.34) 0%, rgba(57,217,138,0) 65%); }
+      .beam.b2 { left: 900px; background: radial-gradient(ellipse at center, rgba(59,123,255,0.34) 0%, rgba(59,123,255,0) 65%); }
+      .logo { position: absolute; left: 0; right: 0; display: grid; grid-template-columns: auto auto; justify-content: center; align-items: end;
+        column-gap: 40px; font-family: "League Gothic"; line-height: 0.86; text-transform: uppercase; }
+      .logo.lg { top: 170px; }
+      .logo.sm { top: 330px; transform: scale(0.62); }
+      .logo .lw { display: flex; font-size: 400px; color: #3b7bff; }
+      .logo .lw span { display: block; }
+      .logo .lai { font-size: 400px; color: #39d98a; }
+      .logo .lm { grid-column: 1 / span 2; text-align: center; font-size: 250px; color: #f2ecdf; letter-spacing: 0.02em; }
+      .tagline { position: absolute; left: 0; right: 0; top: 860px; text-align: center; font-family: "Space Mono"; font-weight: 700; font-size: 36px;
+        letter-spacing: 0.34em; color: #39d98a; }
+      .rings { position: absolute; left: 760px; top: 340px; width: 400px; height: 400px; }
+      .rings i { position: absolute; inset: 0; border-radius: 50%; border: 8px solid #39d98a; display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="{{DURATION}}">
+      <div id="studio" data-layout-ignore><div class="grid" data-layout-ignore></div><div class="glow1" data-layout-ignore></div><div class="glow2" data-layout-ignore></div><div class="ghost" data-layout-ignore aria-hidden="true">CHANNEL NAME · CHANNEL NAME</div></div>
+      <div id="platecard"><div id="platecam">{{PLATE}}</div></div><div id="cardring"></div>
+      <div id="scrim"></div>
+      <div id="fgcam">{{FG}}</div>
+      {{ELEMENTS}}
+      {{CAM}}
+      {{AUDIO}}
+    </div>
+    <script>
+      document.fonts.ready.then(function () {
+        var H = window.__hyperframes;
+        var groups = {};
+        document.querySelectorAll("[data-fit]").forEach(function (el) {
+          if (!H || !H.fitTextFontSize) return;
+          var cs = getComputedStyle(el);
+          var base = parseFloat(cs.fontSize);
+          var r = H.fitTextFontSize(el.getAttribute("data-fit").toUpperCase(), {
+            fontFamily: cs.fontFamily.split(",")[0].replace(/["']/g, "").trim(),
+            fontWeight: 400,
+            maxWidth: parseFloat(el.getAttribute("data-fitw") || "1780"),
+            baseFontSize: base,
+            minFontSize: 60,
+            step: 4,
+          });
+          var size = r && r.fontSize && r.fontSize < base ? r.fontSize : base;
+          el.style.fontSize = size + "px";
+          var g = el.getAttribute("data-fitgroup");
+          if (g) groups[g] = Math.min(groups[g] || 1e9, size);
+        });
+        document.querySelectorAll("[data-fitgroup]").forEach(function (el) {
+          el.style.fontSize = groups[el.getAttribute("data-fitgroup")] + "px";
+        });
+
+        var tl = gsap.timeline({ paused: true });
+        var D = {{DURATION}};
+        tl.fromTo("#studio .glow1", { x: 0, y: 0 }, { x: 260, y: -140, duration: D, ease: "none" }, 0);
+        tl.fromTo("#studio .glow2", { x: 0, y: 0 }, { x: -300, y: 180, duration: D, ease: "none" }, 0);
+        tl.fromTo("#studio .ghost", { x: 0 }, { x: -900, duration: D, ease: "none" }, 0);
+        tl.fromTo("#studio .grid", { y: 0 }, { y: 120 * Math.floor(D / 6), duration: D, ease: "none" }, 0);
+{{TIMELINE}}
+        window.__timelines["main"] = tl;
+      });
+    </script>
+  </body>
+</html>

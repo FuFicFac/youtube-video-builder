@@ -1,0 +1,56 @@
+# ---- lower third + splash + bumper -----------------------------------------------------
+el_html.append(f'''<div class="clip lower3" id="l3" data-start="0.15" data-duration="{round(SPLASH_IN - 0.1, 3)}" data-track-index="5">
+<div class="l3bar" id="l3bar"></div><div class="l3name" id="l3name">HOST NAME</div><div class="l3sub" id="l3sub">HOST · CHANNEL NAME</div></div>''')
+js.append('tl.fromTo("#l3bar",{scaleX:0},{scaleX:1,duration:.5,ease:"expo.out"},0.2);')
+js.append('tl.fromTo("#l3name",{opacity:0,x:-40},{opacity:1,x:0,duration:.45,ease:"power3.out"},0.3);')
+js.append('tl.fromTo("#l3sub",{opacity:0,x:-30},{opacity:1,x:0,duration:.45,ease:"power3.out"},0.45);')
+js.append(f'tl.to("#l3",{{opacity:0,duration:.2}},{SPLASH_IN - 0.3:.3f});')
+
+
+def logo(prefix, big=True):
+    # Three-part wordmark placeholder (stacked letters / accent word / wide word). Replace the text with your
+    # channel's wordmark and retune the .lw/.lai/.lm sizes in template.html to fit.
+    return (f'<div class="logo {"lg" if big else "sm"}" id="{prefix}logo">'
+            f'<div class="lw" id="{prefix}w" data-layout-allow-overlap><span data-layout-allow-overlap>Y</span><span data-layout-allow-overlap>O</span><span data-layout-allow-overlap>U</span><span data-layout-allow-overlap>R</span></div>'
+            f'<div class="lai" id="{prefix}ai">CH</div>'
+            f'<div class="lm" id="{prefix}m" data-layout-allow-overlap>CHANNEL</div></div>')
+
+
+el_html.append(f'<div class="clip takeover" id="splash" data-start="{SPLASH_IN:.3f}" data-duration="{SPLASH_OUT - SPLASH_IN:.3f}" data-track-index="8">'
+               '<div class="tobg" id="splbg"></div><div class="beam b1" id="splb1"></div><div class="beam b2" id="splb2"></div>'
+               + logo("spl") + '<div class="tagline" id="spltag">YOUR CHANNEL TAGLINE</div></div>')
+S0 = SPLASH_IN
+js += [
+    f'tl.fromTo("#splbg",{{clipPath:"inset(50% 0% 50% 0%)"}},{{clipPath:"inset(0% 0% 0% 0%)",duration:.35,ease:"expo.out"}},{S0:.3f});',
+    f'tl.fromTo("#splb1",{{xPercent:-120}},{{xPercent:120,duration:1.4,ease:"power2.inOut"}},{S0 + .1:.3f});',
+    f'tl.fromTo("#splb2",{{xPercent:120}},{{xPercent:-120,duration:1.6,ease:"power2.inOut"}},{S0 + .2:.3f});',
+    f'tl.fromTo("#splw span",{{opacity:0,yPercent:-90,rotationX:-80}},{{opacity:1,yPercent:0,rotationX:0,duration:.45,stagger:.08,ease:"back.out(1.8)"}},{S0 + .25:.3f});',
+    f'tl.fromTo("#splai",{{opacity:0,scale:2.6}},{{opacity:1,scale:1,duration:.35,ease:"expo.out"}},{at("channel name.", 3.2) - .1:.3f});',
+    f'tl.fromTo("#splm",{{opacity:0,clipPath:"inset(0% 100% 0% 0%)"}},{{opacity:1,clipPath:"inset(0% 0% 0% 0%)",duration:.4,ease:"power4.out"}},{at("name.", 3.5) - .05:.3f});',
+    f'tl.fromTo("#spllogo",{{scale:1}},{{scale:1.06,duration:1.2,ease:"none"}},{at("name.", 3.5):.3f});',
+    f'tl.fromTo("#spltag",{{opacity:0,y:20}},{{opacity:1,y:0,duration:.35,ease:"power3.out"}},{at("name.", 3.5) + .2:.3f});',
+    f'tl.to("#spllogo",{{opacity:0,scale:.6,filter:"blur(12px)",duration:.3,ease:"power3.in"}},{SPLASH_OUT - .35:.3f});',
+    f'tl.to(["#splbg","#spltag"],{{opacity:0,duration:.3,ease:"power2.in"}},{SPLASH_OUT - .3:.3f});',
+]
+el_html.append(f'<div class="clip takeover" id="bumper" data-start="{C:.3f}" data-duration="{B:.3f}" data-track-index="8">'
+               '<div class="tobg" id="bmpbg"></div><div class="rings" id="bmprings"><i></i><i></i><i></i></div>'
+               + logo("bmp") + '<div class="tagline" id="bmptag">EPISODE TITLE · SUBTITLE</div></div>')
+js += [
+    f'tl.fromTo("#bmpbg",{{clipPath:"circle(0% at 50% 50%)"}},{{clipPath:"circle(120% at 50% 50%)",duration:.5,ease:"power3.inOut"}},{C:.3f});',
+    f'tl.fromTo("#bmprings i",{{scale:.2,opacity:.9}},{{scale:3.2,opacity:0,duration:1.6,stagger:.3,ease:"power2.out"}},{C + .7:.3f});',
+    f'tl.fromTo("#bmpw span",{{opacity:0,y:120}},{{opacity:1,y:0,duration:.4,stagger:.07,ease:"expo.out"}},{C + .35:.3f});',
+    f'tl.fromTo("#bmpai",{{opacity:0,rotation:-25,scale:.3}},{{opacity:1,rotation:0,scale:1,duration:.45,ease:"back.out(2.4)"}},{C + .7:.3f});',
+    f'tl.fromTo("#bmpm",{{opacity:0,scaleX:1.7}},{{opacity:1,scaleX:1,duration:.6,ease:"expo.out"}},{C + .85:.3f});',
+    f'tl.fromTo("#bmptag",{{opacity:0,y:30}},{{opacity:1,y:0,duration:.4,ease:"power3.out"}},{C + 1.3:.3f});',
+    f'tl.to("#bmplogo",{{scale:1.08,duration:1.6,ease:"none"}},{C + 1.1:.3f});',
+    f'tl.to(["#bmplogo","#bmptag","#bmprings"],{{opacity:0,y:-60,duration:.3,ease:"power3.in"}},{C + B - .45:.3f});',
+    f'tl.to("#bmpbg",{{clipPath:"inset(0% 0% 100% 0%)",duration:.4,ease:"power3.inOut"}},{C + B - .4:.3f});',
+]
+# final fade
+el_html.append(f'<div class="clip takeover" id="outro" data-start="{T(AROLL_DUR) - 0.4:.3f}" data-duration="{TAIL + 0.4:.3f}" data-track-index="8">'
+               '<div class="tobg" id="outbg"></div>' + logo("out", big=False) + '</div>')
+js += [
+    f'tl.fromTo("#outbg",{{opacity:0}},{{opacity:1,duration:.5,ease:"power2.inOut"}},{T(AROLL_DUR) - 0.4:.3f});',
+    f'tl.fromTo("#outlogo",{{opacity:0,scale:.9}},{{opacity:1,scale:1,duration:.6,ease:"power3.out"}},{T(AROLL_DUR) + .1:.3f});',
+]
+

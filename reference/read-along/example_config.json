@@ -1,0 +1,76 @@
+{
+ "project": "/path/to/your/project",
+ "id": "read-along",
+ "start": 160.015,
+ "end": 256.987,
+ "track_index": 6,
+ "header": [
+  "BOOK TITLE",
+  "CHAPTER 1 · CHAPTER NAME"
+ ],
+ "paragraphs": [
+  "The morning ferry left the island at six, and by the time it cleared the breakwater the fog had already started to lift off the water.",
+  "“Rope,” the captain said.",
+  "She coiled it without looking. The engine settled into its usual rattle. Behind them the harbour lights went out one by one, and ahead the mainland showed as a thin grey line under a pale sky.",
+  "The deckhand stacked the last crates by the rail. The one on top read HANDLE WITH CARE in faded red letters. He lashed it down against the roll of the swell.",
+  "“You could slow her down,” he said.",
+  "The captain, one hand on the wheel and the other around a mug of tea, looked over at him. “You could swim.”",
+  "“I could take the wheel.”",
+  "“Then why are you still talking?”",
+  "He laughed because she expected him to. The brass plate by the door read 1962. The date sounded more certain than the engine did."
+ ],
+ "pages": [
+  [
+   [
+    0,
+    1
+   ],
+   "R"
+  ],
+  [
+   [
+    2
+   ],
+   "L"
+  ],
+  [
+   [
+    3,
+    4,
+    5
+   ],
+   "R"
+  ],
+  [
+   [
+    6,
+    7,
+    8
+   ],
+   "L"
+  ]
+ ],
+ "font_sizes": [
+  66,
+  56,
+  52,
+  70
+ ],
+ "words": "work/edit_words_final.json",
+ "cam": {
+  "src": "assets/edit/cam_read.webm",
+  "source_start": 0,
+  "segments": [
+   [
+    160.015,
+    0,
+    96.972
+   ]
+  ]
+ },
+ "pin_src": "assets/src/source.mp4",
+ "pin_source_from": 158,
+ "pin_source_to": 296,
+ "fps": 23.976,
+ "_note": "Example values in the shape of a real reading scene (final-timeline seconds incl. a 3.4 s bumper). The passage is neutral sample text. Copy, then replace every value for the new video: paragraphs must be the verbatim text read on screen, and times must come from your own word timings."
+}

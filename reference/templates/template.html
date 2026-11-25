@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>CHANNEL NAME — Episode title</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face {
+        font-family: "Newsreader";
+        src: url("assets/fonts/Newsreader.ttf") format("truetype");
+        font-weight: 200 800;
+        font-style: normal;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1920px; height: 1080px; overflow: hidden; background: #0a1424; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0a1424; font-family: "Space Mono", monospace; color: #f2ecdf; }
+      .g { color: #39d98a; }
+      .r { color: #ff5d4f; }
+
+      /* studio ground */
+      #studio { position: absolute; inset: 0; background: #0a1424; overflow: hidden; }
+      #studio .glow1 { position: absolute; width: 1400px; height: 1400px; left: -420px; top: 260px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(57,217,138,0.30) 0%, rgba(57,217,138,0) 62%); }
+      #studio .glow2 { position: absolute; width: 1300px; height: 1300px; left: 1000px; top: -620px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(59,123,255,0.28) 0%, rgba(59,123,255,0) 62%); }
+      #studio .grid { position: absolute; inset: -80px; opacity: 0.14;
+        background-image: linear-gradient(rgba(242,236,223,0.5) 2px, transparent 2px), linear-gradient(90deg, rgba(242,236,223,0.5) 2px, transparent 2px);
+        background-size: 120px 120px; }
+      #studio .ghost { position: absolute; left: -40px; bottom: -120px; width: 2400px; font-family: "League Gothic"; font-size: 520px; line-height: 1;
+        color: rgba(242,236,223,0.07); white-space: nowrap; letter-spacing: -0.01em; }
+
+      #platecam, #fgcam { position: absolute; inset: 0; transform-origin: 50% 32%; }
+      #fgcam { z-index: 4; }
+      .fill { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+      #scrim { position: absolute; inset: 0; background: #07101e; opacity: 0; z-index: 2; }
+
+      /* text behind the presenter */
+      .behind { position: absolute; inset: 0; z-index: 3; }
+      .behind .kicker { position: absolute; left: 70px; right: 70px; top: 30px; font-family: "Space Mono"; font-weight: 700; font-size: 30px;
+        letter-spacing: 0.08em; color: #39d98a; display: flex; align-items: center; gap: 18px; text-transform: uppercase; }
+      .behind .kdot { display: block; width: 18px; height: 18px; border-radius: 50%; background: #39d98a; flex: 0 0 18px; }
+      .behind .bh { position: absolute; font-family: "League Gothic"; line-height: 0.9; color: #f2ecdf; white-space: nowrap;
+        text-transform: uppercase; letter-spacing: -0.005em; opacity: 0; text-shadow: 0 12px 60px rgba(0,0,0,0.45); }
+      .behind .bh-l { right: 1235px; text-align: right; }
+      .behind .bh-r { left: 1235px; text-align: left; }
+      .behind .rows1.row0 { top: 70px; font-size: 470px; }
+      .behind .rows2.row0 { top: 62px; font-size: 250px; }
+      .behind .rows2.row1 { top: 292px; font-size: 250px; }
+
+      /* studio panels */
+      .panel { position: absolute; inset: 0; z-index: 5; }
+      .panel .page { position: absolute; top: 110px; bottom: 90px; width: 900px; display: flex; flex-direction: column; justify-content: center; opacity: 0; }
+      .panel.right .page { left: 940px; }
+      .panel.left .page { left: 80px; }
+      .prule { width: 220px; height: 10px; background: #39d98a; transform-origin: 0 50%; margin-bottom: 26px; }
+      .ptitle { font-family: "League Gothic"; font-size: 170px; line-height: 0.95; color: #f2ecdf; white-space: nowrap; text-transform: uppercase; margin-bottom: 18px; }
+      .rows { display: flex; flex-direction: column; align-items: flex-start; }
+      .row { display: flex; align-items: center; gap: 24px; font-family: "Space Mono"; font-weight: 700; font-size: 46px; margin: 16px 0; letter-spacing: 0.02em; }
+      .row .ic { display: block; width: 62px; height: 62px; flex: 0 0 62px; }
+      .row.no span { color: #f2ecdf; text-decoration: line-through; text-decoration-color: #ff5d4f; text-decoration-thickness: 6px; }
+      .chip { display: inline-block; font-family: "League Gothic"; font-size: 92px; line-height: 1.05; padding: 4px 30px 0; margin: 12px 0;
+        border: 5px solid #39d98a; border-radius: 18px; background: rgba(57,217,138,0.10); color: #f2ecdf; white-space: nowrap; text-transform: uppercase; }
+      .note { font-family: "Space Mono"; font-weight: 700; font-size: 42px; letter-spacing: 0.04em; margin: 14px 0; color: #f2ecdf; }
+      .hero { font-family: "League Gothic"; font-size: 250px; line-height: 0.95; white-space: nowrap; text-transform: uppercase; color: #f2ecdf; margin: 6px 0; }
+      .stamp { display: inline-block; font-family: "League Gothic"; font-size: 150px; line-height: 1.02; padding: 6px 36px 0; margin-top: 30px;
+        border: 12px solid #ff5d4f; color: #ff5d4f; border-radius: 10px; white-space: nowrap; background: rgba(10,20,36,0.6); }
+      .stamp.green { border-color: #39d98a; color: #39d98a; }
+      .step { display: flex; align-items: baseline; gap: 26px; margin: 4px 0; }
+      .step b { font-family: "Space Mono"; font-weight: 700; font-size: 40px; color: #39d98a; }
+      .step span { font-family: "League Gothic"; font-size: 86px; line-height: 1; text-transform: uppercase; white-space: nowrap; }
+      .linkcta { display: flex; flex-direction: column; align-items: center; margin-top: 34px; align-self: stretch; }
+      .pill { display: block; font-family: "League Gothic"; font-size: 104px; line-height: 1.08; padding: 6px 54px 0; border-radius: 999px;
+        background: #39d98a; color: #0a1424; white-space: nowrap; box-shadow: 0 0 60px rgba(57,217,138,0.45); }
+      .chev { display: flex; flex-direction: column; align-items: center; margin-top: 18px; height: 150px; }
+      .chev i { display: block; width: 58px; height: 58px; border-right: 13px solid #39d98a; border-bottom: 13px solid #39d98a;
+        transform: rotate(45deg); margin-top: -18px; }
+      .chev i:nth-child(2) { opacity: 0.7; }
+      .chev i:nth-child(3) { opacity: 0.4; }
+      .meter { margin: 20px 0; }
+      .mlabel { font-family: "Space Mono"; font-weight: 700; font-size: 44px; margin-bottom: 18px; }
+      .mtrack { width: 840px; height: 56px; border: 5px solid #f2ecdf; border-radius: 28px; overflow: hidden; }
+      .mfill { width: 100%; height: 100%; background: #39d98a; transform-origin: 0 50%; }
+      .ba { display: flex; align-items: center; gap: 26px; margin: 22px 0; }
+      .bcard { display: flex; flex-direction: column; width: 360px; padding: 26px 30px; border: 5px solid rgba(242,236,223,0.55); border-radius: 22px; background: rgba(10,20,36,0.55); }
+      .bcard.after { border-color: #39d98a; }
+      .bcard small { font-family: "Space Mono"; font-weight: 700; font-size: 30px; color: #39d98a; letter-spacing: 0.1em; }
+      .bcard span { font-family: "League Gothic"; font-size: 92px; line-height: 1; white-space: nowrap; }
+      .barrow { font-family: "Space Mono"; font-weight: 700; font-size: 80px; color: #39d98a; }
+      .slot { width: 860px; height: 484px; border: 7px solid #39d98a; border-radius: 30px; padding: 44px 56px; display: flex; flex-direction: column;
+        justify-content: center; background: rgba(5,11,22,0.7); box-shadow: 0 0 80px rgba(57,217,138,0.25); }
+      .slot small { font-family: "Space Mono"; font-weight: 700; font-size: 36px; letter-spacing: 0.14em; color: #39d98a; }
+      .slotbig { font-family: "League Gothic"; font-size: 230px; line-height: 1; }
+      .slotsub { font-family: "Space Mono"; font-weight: 700; font-size: 34px; line-height: 1.3; }
+
+      /* lower third */
+      .lower3 { position: absolute; left: 80px; bottom: 110px; width: 1000px; height: 250px; z-index: 6; }
+      .l3bar { position: absolute; left: 0; top: 0; width: 14px; height: 250px; background: #39d98a; transform-origin: 50% 100%; }
+      .l3name { position: absolute; left: 44px; top: 10px; font-family: "League Gothic"; font-size: 150px; line-height: 1; color: #f2ecdf;
+        text-shadow: 0 6px 30px rgba(0,0,0,0.6); white-space: nowrap; }
+      .l3sub { position: absolute; left: 48px; top: 172px; font-family: "Space Mono"; font-weight: 700; font-size: 34px; letter-spacing: 0.12em;
+        color: #0a1424; background: #39d98a; padding: 6px 18px; white-space: nowrap; }
+
+      /* manuscript */
+      .readscene { position: absolute; inset: 0; z-index: 7; }
+      .readscene .paper { position: absolute; inset: 0; background: #f2ecdf; }
+      .readscene .paperglow { position: absolute; width: 1600px; height: 1600px; left: -300px; top: -700px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(57,217,138,0.16) 0%, rgba(57,217,138,0) 60%); }
+      .rhead { position: absolute; left: 110px; top: 46px; display: flex; gap: 26px; align-items: center; font-family: "Space Mono"; font-weight: 700;
+        font-size: 30px; letter-spacing: 0.1em; color: #191713; }
+      .chipg { background: #191713; color: #39d98a; padding: 6px 16px; border-radius: 8px; }
+      .rpage { position: absolute; top: 140px; bottom: 60px; display: flex; flex-direction: column; justify-content: center; opacity: 0; }
+      .rpage.colL { left: 110px; width: 1150px; }
+      .rpage.colR { left: 700px; width: 1120px; }
+      .rpage p { font-family: "Newsreader"; font-weight: 450; font-size: 1em; line-height: 1.42; margin: 0 0 30px; color: #191713; }
+      .rpage .w { color: rgba(25,23,19,0.32); border-radius: 6px; }
+      .camwrap { position: absolute; left: 1280px; top: 0; width: 640px; height: 1080px; z-index: 8; overflow: hidden;
+        filter: drop-shadow(0 18px 40px rgba(25,23,19,0.45)); }
+      #camflip { position: absolute; inset: 0; transform-origin: 50% 50%; }
+      .camwrap video { position: absolute; left: 0; bottom: -46px; width: 640px; height: 1126px; }
+
+
+      #icard { position: absolute; left: 0; top: 100px; width: 700px; height: 880px; z-index: 5; opacity: 0; border-radius: 36px; overflow: hidden;
+        box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 0 3px rgba(57,217,138,0.6); }
+      #icv { position: absolute; inset: 0; transform-origin: 50% 35%; }
+      #icard video { position: absolute; left: -610px; top: -90px; width: 1920px; height: 1080px; }
+      /* ---- demo stage ---- */
+      .demobg { position: absolute; inset: 0; z-index: 0; background: #0a1424; overflow: hidden; }
+      .demobg .dglow1 { position: absolute; width: 1500px; height: 1500px; left: -500px; top: 300px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(57,217,138,0.22) 0%, rgba(57,217,138,0) 62%); }
+      .demobg .dglow2 { position: absolute; width: 1400px; height: 1400px; left: 1000px; top: -700px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(59,123,255,0.22) 0%, rgba(59,123,255,0) 62%); }
+      #vp { position: absolute; left: 0; top: 0; width: 1780px; height: 750px; z-index: 1; transform-origin: 0 0; opacity: 0;
+        border-radius: 26px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,0.55), 0 0 0 3px rgba(57,217,138,0.35); background: #000; }
+      #scrz { position: absolute; inset: 0; }
+      #scr { position: absolute; left: 0; top: 0; width: 1780px; height: 750px; object-fit: cover; }
+      #cw { position: absolute; left: 0; top: 0; width: 560px; height: 860px; z-index: 6; transform-origin: 0 0;
+        filter: drop-shadow(0 18px 40px rgba(0,0,0,0.55)) drop-shadow(0 0 3px rgba(57,217,138,0.9)); }
+      #cwin { position: absolute; inset: 0; overflow: hidden; }
+      #cam { position: absolute; left: 0; top: 0; width: 560px; height: 984px; }
+      .tracker { position: absolute; left: 70px; top: 44px; z-index: 7; }
+      .tkin { display: flex; align-items: center; gap: 16px; font-family: "Space Mono"; font-weight: 700; font-size: 28px; letter-spacing: 0.06em; }
+      .tkdot { display: block; width: 16px; height: 16px; border-radius: 50%; background: #39d98a; flex: 0 0 16px; }
+      .tklab { color: #0a1424; background: #39d98a; padding: 6px 14px; border-radius: 8px; }
+      .tktxt { color: #f2ecdf; }
+      .swatch { display: flex; align-items: center; gap: 24px; margin: 14px 0; font-family: "League Gothic"; font-size: 96px; }
+      .swatch i { display: block; width: 110px; height: 110px; border-radius: 20px; border: 4px solid #f2ecdf; }
+
+      /* full-screen takeovers */
+      .takeover { position: absolute; inset: 0; z-index: 9; }
+      .tobg { position: absolute; inset: 0; background: #0a1424; }
+      .beam { position: absolute; top: -200px; width: 700px; height: 1480px; border-radius: 50%; }
+      .beam.b1 { left: 300px; background: radial-gradient(ellipse at center, rgba(57,217,138,0.34) 0%, rgba(57,217,138,0) 65%); }
+      .beam.b2 { left: 900px; background: radial-gradient(ellipse at center, rgba(59,123,255,0.34) 0%, rgba(59,123,255,0) 65%); }
+      .logo { position: absolute; left: 0; right: 0; display: grid; grid-template-columns: auto auto; justify-content: center; align-items: end;
+        column-gap: 40px; font-family: "League Gothic"; line-height: 0.86; text-transform: uppercase; }
+      .logo.lg { top: 170px; }
+      .logo.sm { top: 330px; transform: scale(0.62); }
+      .logo .lw { display: flex; font-size: 400px; color: #3b7bff; }
+      .logo .lw span { display: block; }
+      .logo .lai { font-size: 400px; color: #39d98a; }
+      .logo .lm { grid-column: 1 / span 2; text-align: center; font-size: 250px; color: #f2ecdf; letter-spacing: 0.02em; }
+      .tagline { position: absolute; left: 0; right: 0; top: 860px; text-align: center; font-family: "Space Mono"; font-weight: 700; font-size: 36px;
+        letter-spacing: 0.34em; color: #39d98a; }
+      .rings { position: absolute; left: 760px; top: 340px; width: 400px; height: 400px; }
+      .rings i { position: absolute; inset: 0; border-radius: 50%; border: 8px solid #39d98a; display: block; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-width="1920" data-height="1080" data-duration="{{DURATION}}">
+      <div id="studio" data-layout-ignore><div class="grid" data-layout-ignore></div><div class="glow1" data-layout-ignore></div><div class="glow2" data-layout-ignore></div><div class="ghost" data-layout-ignore aria-hidden="true">CHANNEL NAME · CHANNEL NAME</div></div>
+      <div id="platecam">{{PLATE}}</div>
+      <div id="scrim"></div>
+      <div id="fgcam">{{FG}}</div>
+      {{ELEMENTS}}
+      {{CAM}}
+      {{AUDIO}}
+    </div>
+    <script>
+      document.fonts.ready.then(function () {
+        var H = window.__hyperframes;
+        var groups = {};
+        document.querySelectorAll("[data-fit]").forEach(function (el) {
+          if (!H || !H.fitTextFontSize) return;
+          var cs = getComputedStyle(el);
+          var base = parseFloat(cs.fontSize);
+          var r = H.fitTextFontSize(el.getAttribute("data-fit").toUpperCase(), {
+            fontFamily: cs.fontFamily.split(",")[0].replace(/["']/g, "").trim(),
+            fontWeight: 400,
+            maxWidth: parseFloat(el.getAttribute("data-fitw") || "1780"),
+            baseFontSize: base,
+            minFontSize: 60,
+            step: 4,
+          });
+          var size = r && r.fontSize && r.fontSize < base ? r.fontSize : base;
+          el.style.fontSize = size + "px";
+          var g = el.getAttribute("data-fitgroup");
+          if (g) groups[g] = Math.min(groups[g] || 1e9, size);
+        });
+        document.querySelectorAll("[data-fitgroup]").forEach(function (el) {
+          el.style.fontSize = groups[el.getAttribute("data-fitgroup")] + "px";
+        });
+
+        var tl = gsap.timeline({ paused: true });
+        var D = {{DURATION}};
+        tl.fromTo("#studio .glow1", { x: 0, y: 0 }, { x: 260, y: -140, duration: D, ease: "none" }, 0);
+        tl.fromTo("#studio .glow2", { x: 0, y: 0 }, { x: -300, y: 180, duration: D, ease: "none" }, 0);
+        tl.fromTo("#studio .ghost", { x: 0 }, { x: -900, duration: D, ease: "none" }, 0);
+        tl.fromTo("#studio .grid", { y: 0 }, { y: 120 * Math.floor(D / 6), duration: D, ease: "none" }, 0);
+{{TIMELINE}}
+        window.__timelines["main"] = tl;
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>CHANNEL NAME — short</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      @font-face { font-family: "Newsreader"; src: url("assets/Newsreader.ttf") format("truetype"); font-weight: 200 800; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #0a1424; }
+      #root { position: relative; width: 100%; height: 100%; overflow: hidden; background: #0a1424; color: #f2ecdf; font-family: "Space Mono", monospace; }
+      .g { color: #39d98a; }
+      .r { color: #ff5d4f; }
+      #bg { position: absolute; inset: 0; background: #0a1424; overflow: hidden; }
+      #bg .glow1 { position: absolute; width: 1400px; height: 1400px; left: -600px; top: 900px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(57,217,138,0.32) 0%, rgba(57,217,138,0) 62%); }
+      #bg .glow2 { position: absolute; width: 1300px; height: 1300px; left: 300px; top: -500px; border-radius: 50%;
+        background: radial-gradient(circle, rgba(59,123,255,0.30) 0%, rgba(59,123,255,0) 62%); }
+      #bg .grid { position: absolute; inset: -120px; opacity: 0.14;
+        background-image: linear-gradient(rgba(242,236,223,0.5) 2px, transparent 2px), linear-gradient(90deg, rgba(242,236,223,0.5) 2px, transparent 2px);
+        background-size: 120px 120px; }
+      #bgp { position: absolute; inset: 0; background: #f2ecdf; }
+      #prog { position: absolute; left: 0; top: 0; width: 1080px; height: 14px; background: #39d98a; transform-origin: 0 50%; z-index: 20; }
+
+      #ejcam { position: absolute; inset: 0; z-index: 2; transform-origin: 50% 36%; }
+      .fgv { position: absolute; top: 640px; width: 2373px; height: 1335px; }
+      #camcam { position: absolute; inset: 0; z-index: 2; }
+      .camv { position: absolute; left: 0px; top: 1040px; width: 520px; height: 914px; }
+
+      .bword { position: absolute; left: 0; right: 0; top: 470px; height: 400px; z-index: 1; }
+      .bwin { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-family: "League Gothic"; font-size: 300px; line-height: 1; text-shadow: 0 14px 50px rgba(0,0,0,0.6);
+        white-space: nowrap; text-transform: uppercase; color: #f2ecdf; opacity: 0; }
+
+      .bside { position: absolute; top: 0; width: 340px; height: 460px; display: flex; flex-direction: column; justify-content: center; }
+      .bs-l { left: 12px; align-items: flex-end; text-align: right; }
+      .bs-r { right: 12px; align-items: flex-start; text-align: left; }
+      .bl { font-family: "League Gothic"; font-size: 230px; line-height: 0.88; white-space: nowrap; text-transform: uppercase; color: #f2ecdf;
+        text-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+      .bl.g { color: #39d98a; }
+      .bl.r { color: #ff5d4f; }
+      #hook { position: absolute; left: 50px; right: 50px; top: 90px; z-index: 8; transform-origin: 50% 0%; }
+      .hl { font-family: "League Gothic"; font-size: 150px; line-height: 0.96; text-align: center; text-transform: uppercase; white-space: nowrap;
+        color: #f2ecdf; text-shadow: 0 8px 30px rgba(0,0,0,0.5); }
+      .read .hl { color: #191713; text-shadow: none; }
+      .read .hl .g { color: #0f7a45; }
+
+      .cap { position: absolute; left: 40px; right: 40px; top: 1500px; height: 320px; z-index: 6; }
+      .capin { position: absolute; left: 0; right: 0; top: 0; text-align: center; font-family: "League Gothic"; font-size: 170px; line-height: 1;
+        white-space: nowrap; color: #f2ecdf; -webkit-text-stroke: 14px #0a1424; paint-order: stroke fill;
+        text-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+      .cw { display: inline-block; margin: 0 0.1em; }
+      .cw.em { color: #f2ecdf; }
+
+      .mpage { position: absolute; left: 70px; right: 70px; top: 420px; height: 640px; overflow: hidden; z-index: 1;
+        -webkit-mask-image: linear-gradient(#000 78%, transparent 100%); mask-image: linear-gradient(#000 78%, transparent 100%); }
+      .mscroll { position: absolute; left: 0; right: 0; top: 0; }
+      .mpage p { font-family: "Newsreader"; font-weight: 450; font-size: 60px; line-height: 1.36; color: #191713; margin-bottom: 30px; }
+      .mpage .w { color: rgba(25,23,19,0.3); border-radius: 6px; }
+
+      #end { position: absolute; inset: 0; z-index: 30; }
+      #endbg { position: absolute; inset: 0; background: #0a1424; }
+      #endin { position: absolute; left: 0; right: 0; top: 520px; display: flex; flex-direction: column; align-items: center; }
+      .elogo1 { font-family: "League Gothic"; font-size: 330px; line-height: 0.9; }
+      .elogo2 { font-family: "League Gothic"; font-size: 210px; line-height: 0.9; color: #f2ecdf; }
+      .ecta { margin-top: 70px; font-family: "Space Mono"; font-weight: 700; font-size: 44px; letter-spacing: 0.12em; color: #0a1424; background: #39d98a;
+        padding: 14px 34px; border-radius: 999px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" class="{{READCLS}}" data-composition-id="main" data-start="0" data-width="1080" data-height="1920" data-duration="{{TOTAL}}">
+      {{BG}}
+      {{ELEMENTS}}
+      {{PERSON}}
+      <div id="hook">{{HOOK}}</div>
+      <div id="prog"></div>
+      <div id="end" class="clip" data-start="{{SPEECH}}" data-duration="{{ENDDUR}}" data-track-index="9">
+        <div id="endbg"></div>
+        <div id="endin">
+          <!-- PLACEHOLDER wordmark: replace with your channel name and resize to fit -->
+          <div class="elogo1"><span style="color:#3b7bff">YOUR</span> <span class="g">TV</span></div>
+          <div class="elogo2">CHANNEL</div>
+          <div class="ecta">FULL VIDEO ON THE CHANNEL</div>
+        </div>
+      </div>
+      {{AUDIO}}
+    </div>
+    <script>
+      document.fonts.ready.then(function () {
+        var H = window.__hyperframes;
+        var groups = {};
+        document.querySelectorAll("[data-fit]").forEach(function (el) {
+          if (!H || !H.fitTextFontSize) return;
+          var cs = getComputedStyle(el);
+          var base = parseFloat(cs.fontSize);
+          var r = H.fitTextFontSize(el.getAttribute("data-fit").toUpperCase(), {
+            fontFamily: cs.fontFamily.split(",")[0].replace(/["']/g, "").trim(),
+            fontWeight: 400, maxWidth: parseFloat(el.getAttribute("data-fitw") || "960"),
+            baseFontSize: base, minFontSize: 60, step: 4,
+          });
+          var size = r && r.fontSize && r.fontSize < base ? r.fontSize : base;
+          el.style.fontSize = size + "px";
+          var g = el.getAttribute("data-fitgroup");
+          if (g) groups[g] = Math.min(groups[g] || 1e9, size);
+        });
+        document.querySelectorAll("[data-fitgroup]").forEach(function (el) {
+          el.style.fontSize = groups[el.getAttribute("data-fitgroup")] + "px";
+        });
+        var tl = gsap.timeline({ paused: true });
+{{TIMELINE}}
+        window.__timelines["main"] = tl;
+      });
+    </script>
+  </body>
+</html>
